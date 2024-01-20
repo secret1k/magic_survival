@@ -1,8 +1,8 @@
 
-
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QGraphicsRectItem
 from PyQt5.QtCore import Qt, QTimer
+
 
 class Character(QGraphicsRectItem):
     def __init__(self):
@@ -14,7 +14,7 @@ class Character(QGraphicsRectItem):
         self.move_directions = set()
         self.animation_timer = QTimer()
         self.animation_timer.timeout.connect(self.move)
-        self.animation_timer.start(5)
+        self.animation_timer.start(10)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_W:
@@ -27,13 +27,13 @@ class Character(QGraphicsRectItem):
             self.move_directions.add("right")
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key.Key_W:
+        if event.key() == Qt.Key_W:
             self.move_directions.discard("up")
-        elif event.key() == Qt.Key.Key_S:
+        elif event.key() == Qt.Key_S:
             self.move_directions.discard("down")
-        elif event.key() == Qt.Key.Key_A:
+        elif event.key() == Qt.Key_A:
             self.move_directions.discard("left")
-        elif event.key() == Qt.Key.Key_D:
+        elif event.key() == Qt.Key_D:
             self.move_directions.discard("right")
 
     def move(self):
@@ -46,6 +46,7 @@ class Character(QGraphicsRectItem):
         if "right" in self.move_directions:
             self.moveBy(self.step, 0)
 
+
 class Enemy(QGraphicsRectItem):
     def __init__(self, character):
         super().__init__(0, 0, 30, 30)
@@ -54,7 +55,7 @@ class Enemy(QGraphicsRectItem):
         self.character = character
 
     def move(self):
-        step = 5
+        step = 0.5
         if self.x() > self.character.x():
             self.moveBy(-step, 0)
         else:
@@ -65,6 +66,7 @@ class Enemy(QGraphicsRectItem):
             self.moveBy(0, step)
         if self.collidesWithItem(self.character):
             print("Character got hit!")
+
 
 class Game(QMainWindow):
     def __init__(self):
@@ -79,13 +81,14 @@ class Game(QMainWindow):
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.enemy.move)
-        self.timer.start(50)
+        self.timer.start(10)
 
     def keyPressEvent(self, event):
         self.character.keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
         self.character.keyReleaseEvent(event)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
