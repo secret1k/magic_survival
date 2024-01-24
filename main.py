@@ -1,51 +1,63 @@
 
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QGraphicsRectItem
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QGraphicsRectItem, QDesktopWidget
 from PyQt5.QtCore import Qt, QTimer
+
 
 
 class Character(QGraphicsRectItem):
     def __init__(self):
-        super().__init__(0, 0, 50, 50)
+        super().__init__(0, 0, 1, 1)
         self.setBrush(Qt.blue)
         self.setFlag(QGraphicsRectItem.ItemIsFocusable)
         self.setFocus()
-        self.step = 1
+        self.step = 4
         self.move_directions = set()
         self.animation_timer = QTimer()
         self.animation_timer.timeout.connect(self.move)
         self.animation_timer.start(10)
 
+
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_W:
+        if event.text() in ['w','W','ц','Ц']:
             self.move_directions.add("up")
-        elif event.key() == Qt.Key_S:
+        elif event.text() in ['s','S','ы','Ы']:
             self.move_directions.add("down")
-        elif event.key() == Qt.Key_A:
+        elif event.text() in ['a','A','ф','Ф']:
             self.move_directions.add("left")
-        elif event.key() == Qt.Key_D:
+        elif event.text() in ['d','D','в','В']:
             self.move_directions.add("right")
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_W:
+        if event.text() in ['w','W','ц','Ц']:
             self.move_directions.discard("up")
-        elif event.key() == Qt.Key_S:
+        elif event.text() in ['s','S','ы','Ы']:
             self.move_directions.discard("down")
-        elif event.key() == Qt.Key_A:
+        elif event.text() in ['a','A','ф','Ф']:
             self.move_directions.discard("left")
-        elif event.key() == Qt.Key_D:
+        elif event.text() in ['d','D','в','В']:
             self.move_directions.discard("right")
 
     def move(self):
-        if "up" in self.move_directions:
-            self.moveBy(0, -self.step)
-        if "down" in self.move_directions:
-            self.moveBy(0, self.step)
-        if "left" in self.move_directions:
-            self.moveBy(-self.step, 0)
-        if "right" in self.move_directions:
-            self.moveBy(self.step, 0)
+        current_pos = self.scenePos()
+        new_pos = current_pos
+        scene_rect = self.scene().sceneRect()
 
+        if "up" in self.move_directions:
+            new_pos.setY(current_pos.y() - self.step)
+        if "down" in self.move_directions:
+            new_pos.setY(current_pos.y() + self.step)
+        if "left" in self.move_directions:
+            new_pos.setX(current_pos.x() - self.step)
+        if "right" in self.move_directions:
+            new_pos.setX(current_pos.x() + self.step)
+
+        scene_rect = self.scene().sceneRect()
+        if not scene_rect.contains(new_pos):
+            new_pos.setX(max(scene_rect.left(), min(new_pos.x(), scene_rect.right() - self.rect().width())))
+            new_pos.setY(max(scene_rect.top(), min(new_pos.y(), scene_rect.bottom() - self.rect().height())))
+
+        self.setPos(new_pos)
 
 class Enemy(QGraphicsRectItem):
     def __init__(self, character):
@@ -71,10 +83,21 @@ class Enemy(QGraphicsRectItem):
 class Game(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint)
+        self.setWindowState(Qt.WindowFullScreen)
         self.scene = QGraphicsScene(self)
         self.view = QGraphicsView(self.scene)
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        screen_rect = QDesktopWidget().screenGeometry()
+        #self.setSceneRect(screen_rect)
+        #self.view.fitInView(self.sceneRect(), Qt.KeepAspectRatio)
+
         self.setCentralWidget(self.view)
         self.character = Character()
+        self.character.setPos(self.width() / 2 - self.character.rect().width() / 2,
+                              self.height() / 2 - self.character.rect().height() / 2)
         self.scene.addItem(self.character)
         self.enemy = Enemy(self.character)
         self.scene.addItem(self.enemy)
@@ -93,5 +116,5 @@ class Game(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     game = Game()
-    game.show()
+    game.showFullScreen()  # Отображение окна на весь экран
     sys.exit(app.exec_())
