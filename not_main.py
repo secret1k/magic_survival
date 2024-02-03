@@ -132,7 +132,7 @@ class Game(QMainWindow):
         painter.fillRect(self.character.x, self.character.y, self.character.X_SIZE_PLAYER, self.character.Y_SIZE_PLAYER,
                          QColor(10, 10, 150))
 
-    def resizeEvent(self, event):  # измените размер окна
+    def resizeEvent(self, event):
         print("Окно изменено")
         QtWidgets.QMainWindow.resizeEvent(self, event)
 
