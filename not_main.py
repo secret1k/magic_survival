@@ -1,25 +1,27 @@
+import random
 import sys
 
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPainter, QColor
+from PyQt5.QtGui import QPainter, QColor, QImage
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QGraphicsRectItem, QDesktopWidget
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, QRect
+
 
 class Character(QGraphicsRectItem):
-    def __init__(self):
+    def __init__(self, x = 800 // 2 - 25, y = 800 // 2 - 25):
         super().__init__(0, 0, 50, 50)
         # self.setBrush(Qt.blue)
         # self.setFlag(QGraphicsRectItem.ItemIsFocusable)
         self.setFocus()
-        self.step = 5
+        self.step = 3
         self.X_SIZE_PLAYER = 50
         self.Y_SIZE_PLAYER = 50
         self.move_direction_U = 0
         self.move_direction_D = 0
         self.move_direction_L = 0
         self.move_direction_R = 0
-        self.x = 0  # current position
-        self.y = 0  # current position
+        self.x = x  # current position
+        self.y = y  # current position
 
     def move(self):
         if self.x - self.step < 0:
@@ -70,25 +72,37 @@ class Character(QGraphicsRectItem):
             self.move_direction_R = 0
 
 
-class Enemy(QGraphicsRectItem):
-    def __init__(self, character):
-        super().__init__(0, 0, 30, 30)
-        self.setBrush(Qt.red)
-        self.setPos(400, 300)
-        self.character = character
+class MovingEnemy:
+    def __init__(self, x = 1000, y = 0, enemy_hp = 3, step = 1):
+        spawn_x_or_y = random.randint(0, 3)
+        if spawn_x_or_y == 0:
+            self.y = -30
+            self.x = random.randint(-10, 800)
+        elif spawn_x_or_y == 1:
+            self.y = 800
+            self.x = random.randint(-10, 800)
+        elif spawn_x_or_y == 2:
+            self.x = -30
+            self.y = random.randint(-10, 800)
+        elif spawn_x_or_y == 3:
+            self.x = 800
+            self.y = random.randint(-10, 800)
+        self.step = step
+        self.enemy_hp = enemy_hp
 
-    def move(self):
-        step = 0.5
-        if self.x() > self.character.x():
-            self.moveBy(-step, 0)
-        else:
-            self.moveBy(step, 0)
-        if self.y() > self.character.y():
-            self.moveBy(0, -step)
-        else:
-            self.moveBy(0, step)
-        if self.collidesWithItem(self.character):
-            print("Character got hit!")
+    # def move(self):
+    #     # self.x -= self.step
+    #
+    #     if self.x > self.Player.:
+    #         self.x -= self.step
+    #     if self.x < self.Player.x:
+    #         self.x += self.step
+    #     if self.y > self.Player.y:
+    #         self.y -= self.step
+    #     if self.y < self.Player.y:
+    #         self.y += self.step
+        # if self.collidesWithItem(self.character):
+        #     print("Character got hit!")
 
 
 class Game(QMainWindow):
@@ -98,12 +112,18 @@ class Game(QMainWindow):
         self.w = self.size().width()
         self.h = self.size().height()
 
+        self.enemies = []
+        self.enemy_timer = QTimer()
+        self.enemy_timer.timeout.connect(self.create_enemy)
+        self.enemy_timer.start(1000)
+
         self.setGeometry(30, 30, 800, 800)
         self.show()
         self.scene = QGraphicsScene(self)
         self.view = QGraphicsView(self.scene)
 
         self.character = Character()
+
 
         # self.character.setPos(self.width() / 2 - self.character.rect().width() / 2,
         #                       self.height() / 2 - self.character.rect().height() / 2)
@@ -117,6 +137,19 @@ class Game(QMainWindow):
         self.timer.start(16)
 
     def update_game(self):
+        for enemy in self.enemies:
+            if enemy.x > self.character.x:
+                enemy.x -= enemy.step
+            if enemy.x < self.character.x:
+                enemy.x += enemy.step
+
+            if enemy.y > self.character.y:
+                enemy.y -= enemy.step
+            if enemy.y < self.character.y:
+                enemy.y += enemy.step
+            if enemy.x < -30:
+                self.enemies.remove(enemy)
+
         self.character.move()
         self.update()
 
@@ -131,8 +164,10 @@ class Game(QMainWindow):
         painter = QPainter(self)
         painter.fillRect(self.character.x, self.character.y, self.character.X_SIZE_PLAYER, self.character.Y_SIZE_PLAYER,
                          QColor(10, 10, 150))
+        for enemy in self.enemies:
+            painter.drawImage(QRect(enemy.x, enemy.y, 30, 30), QImage('enemy.png'))
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event):  # измените размер окна
         print("Окно изменено")
         QtWidgets.QMainWindow.resizeEvent(self, event)
 
@@ -141,6 +176,10 @@ class Game(QMainWindow):
 
         print(self.width, self.height)  # актуальные размеры окна
 
+    def create_enemy(self):
+        enemy_y = random.randint(0, 800 - 30)
+        enemy = MovingEnemy(800, enemy_y)
+        self.enemies.append(enemy)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
