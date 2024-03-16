@@ -93,7 +93,7 @@ class MovingEnemy:
     def move(self):
         # self.x -= self.step
 
-        if self.x > self.Player.:
+        if self.x > self.Player.x:
             self.x -= self.step
         if self.x < self.Player.x:
             self.x += self.step
@@ -128,7 +128,7 @@ class Game(QMainWindow):
         # self.character.setPos(self.width() / 2 - self.character.rect().width() / 2,
         #                       self.height() / 2 - self.character.rect().height() / 2)
         # self.scene.addItem(self.character)
-
+        #
         # self.enemy = Enemy(self.character)
         # self.scene.addItem(self.enemy)
 
@@ -165,7 +165,7 @@ class Game(QMainWindow):
         painter.fillRect(self.character.x, self.character.y, self.character.X_SIZE_PLAYER, self.character.Y_SIZE_PLAYER,
                          QColor(10, 10, 150))
         for enemy in self.enemies:
-            painter.drawImage(QRect(enemy.x, enemy.y, 30, 30), QImage('enemy.png'))
+            painter.drawImage(QRect(enemy.x, enemy.y, 30, 30), QImage('enemy.jpg'))
 
     def resizeEvent(self, event):  # измените размер окна
         print("Окно изменено")
