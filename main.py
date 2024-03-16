@@ -90,19 +90,19 @@ class MovingEnemy:
         self.step = step
         self.enemy_hp = enemy_hp
 
-    # def move(self):
-    #     # self.x -= self.step
-    #
-    #     if self.x > self.Player.:
-    #         self.x -= self.step
-    #     if self.x < self.Player.x:
-    #         self.x += self.step
-    #     if self.y > self.Player.y:
-    #         self.y -= self.step
-    #     if self.y < self.Player.y:
-    #         self.y += self.step
-        # if self.collidesWithItem(self.character):
-        #     print("Character got hit!")
+    def move(self):
+        # self.x -= self.step
+
+        if self.x > self.Player.:
+            self.x -= self.step
+        if self.x < self.Player.x:
+            self.x += self.step
+        if self.y > self.Player.y:
+            self.y -= self.step
+        if self.y < self.Player.y:
+            self.y += self.step
+        if self.collidesWithItem(self.character):
+            print("Character got hit!")
 
 
 class Game(QMainWindow):
