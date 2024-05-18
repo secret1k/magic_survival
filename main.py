@@ -1,73 +1,80 @@
 import sys
 
-from PyQt6.QtCore import QRectF, Qt
-# from PyQt6.QtGui import QPixmap, QPen, QBrush, QColor
-from PyQt6.QtGui import *
-from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView, QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, \
-    QGraphicsProxyWidget
+from PyQt6.QtCore import Qt, QRectF
+from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QApplication, QWidget, QPushButton, QLabel, QStackedWidget
 
 
 class Scene(QGraphicsScene):
-    def __init__(self):
+    def __init__(self, view):
         super().__init__()
-        self.setSceneRect(0, 0, 800, 450)
-        rect_with_size_like_bg = self.addRect(QRectF(0, 0, self.width(), self.height()), QPen(Qt.PenStyle.NoPen),
-                                              QBrush(QColor(60, 0, 40)))
+        self.setSceneRect(0, 0, 800, 600)  # 16:9 - 960:540
+        self.view = view
+        self.stack_widget = QStackedWidget()
+        self.stack_widget.setGeometry(0, 0, 800, 600)
+        self.addWidget(self.stack_widget)
+        self.main_menu = self.create_main_menu(self, self.view)
+        self.stack_widget.addWidget(self.main_menu)  # Index 0
+        self.settings_menu = self.create_settings_menu(self, self.view)
+        self.stack_widget.addWidget(self.settings_menu)  # Index 1
 
-        start_button = QPushButton("Старт")
-        exit_button = QPushButton("Выход")
+        self.stack_widget.setCurrentWidget(self.main_menu)
 
-        start_button.setFixedSize(100, 50)
-        exit_button.setFixedSize(100, 50)
+    def create_main_menu(self, scene, view):
+        widget = QWidget()
+        widget.setGeometry(0, 0, 800, 600)
+        widget.setStyleSheet('background-color: rgb(70, 70, 70)')
 
-        start_button.clicked.connect(self.start_game)
-        exit_button.clicked.connect(QApplication.instance().quit)
+        main_text = QLabel('Magic Survival', widget)
+        main_text.setGeometry(200, 100, 200, 30)
+        main_text.setFont(QFont('Serif', 24))
+        main_text.setStyleSheet('color: rgb(200, 200, 200)')
 
-        start_proxy = QGraphicsProxyWidget()
-        start_proxy.setWidget(start_button)
-        start_proxy.setPos(self.width() / 2 - start_button.width() / 2, self.height() - start_button.height() * 2.5)
+        start_button = QPushButton('start', widget)
+        start_button.setGeometry(300, 400, 200, 100)
+        start_button.clicked.connect(lambda: self.stack_widget.setCurrentWidget(self.settings_menu))
 
-        exit_proxy = QGraphicsProxyWidget()
-        exit_proxy.setWidget(exit_button)
-        exit_proxy.setPos(self.width() / 2 - exit_button.width() / 2, self.height() - exit_button.height() * 1.3)
+        exit_button = QPushButton('exit', widget)
+        exit_button.setGeometry(300, 500, 200, 100)
+        exit_button.clicked.connect(lambda: view.close())
+        scene.addWidget(widget)
+        return widget
 
-        self.addItem(start_proxy)
-        self.addItem(exit_proxy)
+    def create_settings_menu(self, scene, view):
+        widget = QWidget()
+        widget.setGeometry(0, 0, 800, 600)
+        widget.setStyleSheet('background-color: rgb(70, 70, 70)')
 
-    def start_game(self):
-        print("Игра началась")
+        main_text = QLabel('settings', widget)
+        main_text.setGeometry(200, 100, 200, 30)
+        main_text.setFont(QFont('serif', 20))
+        main_text.setStyleSheet('color: rgb(200, 200, 200)')
 
-    def exit_game(self):
-        QApplication.quit()
+        exit_button = QPushButton('qwerty', widget)
+        exit_button.setGeometry(300, 500, 200, 100)
+        exit_button.clicked.connect(lambda: self.stack_widget.setCurrentWidget(self.main_menu))
+        scene.addWidget(widget)
+        return widget
 
 
 class View(QGraphicsView):
-    def __init__(self, scene):
+    def __init__(self):
         super().__init__()
-
-        self.setScene(scene)
-        self.setMinimumSize(400, 225)
-        self.setMaximumSize(1600, 900)
-        self.move(50, 50)
-
+        self.setMinimumSize(800, 600)
+        # self.setMaximumSize(1600, 900)
+        self.setGeometry(0, 0, 1120, 600)
+        self.scene = Scene(self)
+        self.setScene(self.scene)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        self.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        self.setStyleSheet('border: none;')
-
     def resizeEvent(self, event):
-        self.fitInView(QRectF(0, 0, 800, 450), Qt.AspectRatioMode.KeepAspectRatio)
-
-
-# class Entity():
-#     def __init__(self):
+        self.fitInView(QRectF(0, 0, 800, 600), Qt.AspectRatioMode.KeepAspectRatio)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    game = Scene()
-    game_window = View(game)
-    game_window.show()
+    #
+    menu = View()
+    menu.show()
     sys.exit(app.exec())
