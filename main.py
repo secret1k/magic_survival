@@ -2,7 +2,8 @@ import sys
 
 from PyQt6.QtCore import Qt, QRectF
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QApplication, QWidget, QPushButton, QLabel, QStackedWidget
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QApplication, QWidget, QPushButton, QLabel, QStackedWidget, \
+    QSlider
 
 
 class Scene(QGraphicsScene):
@@ -49,6 +50,12 @@ class Scene(QGraphicsScene):
         main_text.setGeometry(200, 100, 200, 30)
         main_text.setFont(QFont('serif', 20))
         main_text.setStyleSheet('color: rgb(200, 200, 200)')
+
+        slider = QSlider(Qt.Orientation.Horizontal, widget)
+        slider.setGeometry(400, 400, 200, 100)
+        slider.setMinimum(10)
+        slider.setMaximum(200)
+        slider.setTickInterval(50)
 
         exit_button = QPushButton('qwerty', widget)
         exit_button.setGeometry(300, 500, 200, 100)
