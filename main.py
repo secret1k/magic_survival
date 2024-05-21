@@ -1,9 +1,9 @@
 import sys
 
-from PyQt6.QtCore import Qt, QRectF
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt, QRectF, QTimer
+from PyQt6.QtGui import QFont, QPen, QBrush, QColor
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QApplication, QWidget, QPushButton, QLabel, QStackedWidget, \
-    QSlider
+    QSlider, QGraphicsRectItem
 
 
 class Scene(QGraphicsScene):
@@ -11,16 +11,69 @@ class Scene(QGraphicsScene):
         super().__init__()
         self.first_slider_value = 100
         self.setSceneRect(0, 0, 800, 600)  # 16:9 - 960:540
+        self.addRect(QRectF(0, 0, self.width(), self.height()), QPen(Qt.PenStyle.NoPen), QBrush(QColor('green')))
         self.view = view
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_scene)
+        self.timer.start(10)
         self.stack_widget = QStackedWidget()
+        stak_widget = self.addWidget(self.stack_widget)
+        # stak_widget.setZValue(3)
         self.stack_widget.setGeometry(0, 0, 800, 600)
-        self.addWidget(self.stack_widget)
+
         self.main_menu = self.create_main_menu(self, self.view)
         self.stack_widget.addWidget(self.main_menu)  # Index 0
         self.settings_menu = self.create_settings_menu(self, self.view)
         self.stack_widget.addWidget(self.settings_menu)  # Index 1
 
         self.stack_widget.setCurrentWidget(self.main_menu)
+
+        self.player = QGraphicsRectItem()
+        self.player.setPen(QPen(Qt.PenStyle.NoPen))
+        self.player.setBrush(QBrush(QColor('black')))
+        self.addItem(self.player)
+        self.player.setZValue(1)
+        self.player.move_u = 0
+        self.player.move_l = 0
+        self.player.move_d = 0
+        self.player.move_r = 0
+        self.player.step = 5
+        self.player.size_x = 30
+        self.player.size_y = 30
+        self.player.setRect(0, 0, self.player.size_x, self.player.size_y)
+        def move(player):
+            if player.move_u == 1:
+                player.moveBy(0, -player.step)
+            if player.move_l == 1:
+                player.moveBy(-player.step, 0)
+            if player.move_d == 1:
+                player.moveBy(0, player.step)
+            if player.move_r == 1:
+                player.moveBy(player.step, 0)
+        self.player.move = move
+
+    def update_scene(self):
+        self.player.move(self.player)
+
+    def keyPressEvent(self, event):
+        if event.text() in ['W', 'w', 'Ц', 'ц']:
+            self.player.move_u = 1
+        if event.text() in ['A', 'a', 'Ф', 'ф']:
+            self.player.move_l = 1
+        if event.text() in ['S', 's', 'Ы', 'ы']:
+            self.player.move_d = 1
+        if event.text() in ['D', 'd', 'В', 'в']:
+            self.player.move_r = 1
+
+    def keyReleaseEvent(self, event):
+        if event.text() in ['W', 'w', 'Ц', 'ц']:
+            self.player.move_u = 0
+        if event.text() in ['A', 'a', 'Ф', 'ф']:
+            self.player.move_l = 0
+        if event.text() in ['S', 's', 'Ы', 'ы']:
+            self.player.move_d = 0
+        if event.text() in ['D', 'd', 'В', 'в']:
+            self.player.move_r = 0
 
     def create_main_menu(self, scene, view):
         widget = QWidget()
@@ -71,15 +124,21 @@ class Scene(QGraphicsScene):
         slider.setSingleStep(10)
         slider.setPageStep(20)
         print(slider.value())
-        self.first_slider_value = slider.value()  # добавилось выше
+        self.first_slider_value = slider.value()
         slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         slider.setTickInterval(10)
         # slider.valueChanged.connect(lambda: slider_text.setText(f'Value: {slider.value()}'))
         slider.valueChanged.connect(update)
 
-        exit_button = QPushButton('qwerty', widget)
-        exit_button.setGeometry(300, 500, 200, 100)
-        exit_button.clicked.connect(lambda: self.stack_widget.setCurrentWidget(self.main_menu))
+        main_menu_button = QPushButton('qwerty', widget)
+        main_menu_button.setGeometry(300, 500, 200, 100)
+        main_menu_button.clicked.connect(lambda: self.stack_widget.setCurrentWidget(self.main_menu))
+
+        start_game_button = QPushButton('start game', widget)
+        start_game_button.setGeometry(100, 400, 200, 100)
+        def start_game():
+            self.stack_widget.hide()
+        start_game_button.clicked.connect(start_game)
         scene.addWidget(widget)
         return widget
 
