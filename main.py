@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QApplication, QWidget
 class Scene(QGraphicsScene):
     def __init__(self, view):
         super().__init__()
+        self.first_slider_value = 100
         self.setSceneRect(0, 0, 800, 600)  # 16:9 - 960:540
         self.view = view
         self.stack_widget = QStackedWidget()
@@ -51,11 +52,30 @@ class Scene(QGraphicsScene):
         main_text.setFont(QFont('serif', 20))
         main_text.setStyleSheet('color: rgb(200, 200, 200)')
 
+        slider_text = QLabel('Value: 100', widget)
+        slider_text.setGeometry(250, 150, 200, 30)
+        slider_text.setFont(QFont('serif', 20))
+        slider_text.setStyleSheet('color: rgb(150, 230, 150)')
+
+        def update():
+            slider_text.setText(f'value: {slider.value()}')
+            self.first_slider_value = slider.value()
+            print(self.first_slider_value)
+
         slider = QSlider(Qt.Orientation.Horizontal, widget)
-        slider.setGeometry(400, 400, 200, 100)
-        slider.setMinimum(10)
-        slider.setMaximum(200)
-        slider.setTickInterval(50)
+        slider.setGeometry(400, 240, 290, 30)
+        slider.setRange(10, 300)
+        # slider.setMinimum(10)
+        # slider.setMaximum(300)
+        slider.setValue(100)
+        slider.setSingleStep(10)
+        slider.setPageStep(20)
+        print(slider.value())
+        self.first_slider_value = slider.value()  # добавилось выше
+        slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        slider.setTickInterval(10)
+        # slider.valueChanged.connect(lambda: slider_text.setText(f'Value: {slider.value()}'))
+        slider.valueChanged.connect(update)
 
         exit_button = QPushButton('qwerty', widget)
         exit_button.setGeometry(300, 500, 200, 100)
