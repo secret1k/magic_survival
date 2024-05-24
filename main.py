@@ -1,9 +1,12 @@
 import sys
+import random
+from math import cos, sin, pi, sqrt
 
 from PyQt6.QtCore import Qt, QRectF, QTimer
 from PyQt6.QtGui import QFont, QPen, QBrush, QColor
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QApplication, QWidget, QPushButton, QLabel, QStackedWidget, \
     QSlider, QGraphicsRectItem
+from numpy import arcsin
 
 
 class Scene(QGraphicsScene):
@@ -52,8 +55,94 @@ class Scene(QGraphicsScene):
                 player.moveBy(player.step, 0)
         self.player.move = move
 
+        self.enemy_timer = QTimer()
+        self.enemy_timer.timeout.connect(self.enemy_timer.stop)
+
+    class Enemies(QGraphicsRectItem):
+        array_enemies = []
+        timer = QTimer()
+        timer.timeout.connect(timer.stop)
+        def __init__(self):
+            super().__init__()
+            self.setPen(QPen(Qt.PenStyle.NoPen))
+            self.timer = QTimer()
+            self.move_u = 0
+            self.move_l = 0
+            self.move_d = 0
+            self.move_r = 0
+            self.speed_u = 0
+            self.speed_l = 0
+            self.speed_d = 0
+            self.speed_r = 0
+            self.angle = 0
+            self.step = 0
+            self.size_x = 0
+            self.size_y = 0
+
+        def default_enemy(self, scene):
+            enemy = self
+            enemy.size_x, enemy.size_y = 40, 40
+            enemy.step = 1
+            enemy.damage = 0
+            enemy.hp = 0
+            enemy.setBrush(QBrush(QColor('red')))
+            enemy.setRect(0, 0, enemy.size_x, enemy.size_y)
+            spawn_y = random.randint(0, int(scene.height() - enemy.size_y))
+            spawn_x = random.randint(0, int(scene.width() - enemy.size_x))
+            enemy.setPos(spawn_x, spawn_y)
+
+            def move():
+                player_x = scene.player.x()
+                player_y = scene.player.y()
+                angle = 0
+                vertical = 0
+                horizontal = 0
+                third = 0
+                if enemy.x() > player_x:
+                    vertical = player_y - enemy.y()
+                    horizontal = enemy.x() - player_x
+                    third = sqrt((vertical ** 2) + (horizontal ** 2))
+                    angle = 90 - (arcsin(horizontal / third) * (180 / pi))
+                    enemy.angle = angle + 180
+                if enemy.y() > player_y:
+                    vertical = enemy.y() - player_y
+                    horizontal = enemy.x() - player_x
+                    third = sqrt((vertical ** 2) + (horizontal ** 2))
+                    angle = (arcsin(horizontal / third) * (180 / pi))
+                    enemy.angle = angle + 90
+                if enemy.x() < player_x:
+                    if enemy.y() < player_y:
+                        vertical = player_y - enemy.y()
+                        horizontal = player_x - enemy.x()
+                        third = sqrt((vertical ** 2) + (horizontal ** 2))
+                        angle = (arcsin(horizontal / third) * (180 / pi))
+                        enemy.angle = angle + 270
+                    if enemy.y() > player_y:
+                        vertical = enemy.y() - player_y
+                        horizontal = player_x - enemy.x()
+                        third = sqrt((vertical ** 2) + (horizontal ** 2))
+                        angle = 90 - (arcsin(horizontal / third) * (180 / pi))
+                        enemy.angle = angle + 0
+
+                print(horizontal / third, '    ', arcsin(horizontal / third), '   ',
+                      90 - (arcsin(horizontal / third) * (180 / pi)))
+
+                move_scale_x = cos(enemy.angle * (pi / 180)) * enemy.step
+                move_scale_y = -sin(enemy.angle * (pi / 180)) * enemy.step
+                enemy.moveBy(move_scale_x, move_scale_y)
+            enemy.move = move
+            # scene.addItem(enemy)
+            self.array_enemies.append(enemy)
+            return enemy
     def update_scene(self):
         self.player.move(self.player)
+        if self.enemy_timer.isActive() is False:
+            enemy = self.Enemies().default_enemy(self)
+            self.addItem(enemy)
+            self.enemy_timer.start(3000)
+
+        for enemy in self.Enemies.array_enemies:
+            enemy.move()
 
     def keyPressEvent(self, event):
         if event.text() in ['W', 'w', 'Ц', 'ц']:
